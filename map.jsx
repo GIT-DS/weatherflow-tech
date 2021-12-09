@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import axios from 'axios';
+import {MarkerClusterer} from "@googlemaps/markerclusterer"
 
 const mapCenter = { lat: 37.7758, lng: -122.435 };
 
@@ -41,7 +42,7 @@ class Map extends React.Component {
 
     const pos = new google.maps.LatLng(spot.lat, spot.lon);
 
-    const marker = new google.maps.Marker({
+    return new google.maps.Marker({
       position: pos,
       map: this.map
     });
@@ -68,11 +69,20 @@ class Map extends React.Component {
 
       }, ()=> {
         const {lat_min, lat_max, lon_min, lon_max, zoom, units_wind, units_distance, units_temp} = this.state
+        let locations = [];
 
         axios.get(`https://api.weatherflow.com/wxengine/rest/spot/getSpotDetailSetByZoomLevel?lat_min=${lat_min}&lat_max=${lat_max}&lon_min=${lon_min}&lon_max=${lon_max}&zoom=${zoom}1&wf_token=d66eae2622e5fb8f9f7429b5dcb48a6d&units_wind=${units_wind}&units_temp=${units_temp}&units_distance=${units_distance}`)
-        .then(res => res.data.spots.forEach(spot => this.addSpotsMarker(spot), console.log(this.map)))
+        .then(res => res.data.spots.forEach(spot => locations.push(spot)))
+        .then(() => {
+          const markers = locations.map(spot => {
+            return this.addSpotsMarker(spot)
+          })
+  
+          new MarkerClusterer({markers, map: this.map})
 
         }
+        )
+      }
       )
     })}
 
